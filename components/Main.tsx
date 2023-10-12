@@ -185,8 +185,6 @@ export default function Home() {
   // https://web3auth.io/docs/sdk/pnp/web/modal/initialize#arguments
     setUserData(authKitSignData.eoa)
     setLoggedIn(true)
-    // alert(authKitSignData.eoa);
-    // console.log(authKitSignData.safes);
   }
 
   const logout = async () => {
