@@ -13,6 +13,7 @@ import { OpenloginAdapter } from '@web3auth/openlogin-adapter'
 import {
   ADAPTER_EVENTS,
   CHAIN_NAMESPACES,
+  IAdapter,
   SafeEventEmitterProvider,
   UserInfo,
   WALLET_ADAPTERS
@@ -128,7 +129,7 @@ export default function Home() {
       rpcTarget: 'https://rpc.ankr.com/eth_goerli'
     },
     uiConfig: {
-      theme: 'dark',
+      // theme: 'dark',
       loginMethodsOrder: ['google', 'facebook']
     }
   }
@@ -147,14 +148,14 @@ export default function Home() {
   }
 
   // https://web3auth.io/docs/sdk/pnp/web/modal/whitelabel#whitelabeling-while-modal-initialization
-  const openloginAdapter = new OpenloginAdapter({
+  const openloginAdapter: IAdapter<unknown> = new OpenloginAdapter({
     loginSettings: {
       mfaLevel: 'mandatory'
     },
     adapterSettings: {
       uxMode: 'popup',
       whiteLabel: {
-        name: 'Safe'
+        // 'name': 'Safe'
       }
     }
   })
@@ -180,25 +181,8 @@ export default function Home() {
   }
   
 
-  async function login() {
-    // if (!sdkRef.current) {
-    //   const socialLoginSDK = new SocialLogin()    
-    //   await socialLoginSDK.init(ethers.utils.hexValue(ChainId.POLYGON_MAINNET))
-    //   sdkRef.current = socialLoginSDK
-    // }
-    // if (!sdkRef.current.provider) {
-    //   sdkRef.current.showConnectModal()
-    //   sdkRef.current.showWallet()
-    //   enableInterval(true)
-    // } else {
-    //   setupSmartAccount()
-    // }
-    // setMessages([...messages, defaultMessage]);
-    
-    const web3AuthModalPack = new Web3AuthModalPack(web3AuthConfig)
-    await web3AuthModalPack.init({ options, adapters: [openloginAdapter], modalConfig })
-
-    const authKitSignData = await web3AuthModalPack.signIn()
+  async function login() {  
+  // https://web3auth.io/docs/sdk/pnp/web/modal/initialize#arguments
     setUserData(authKitSignData.eoa)
     setLoggedIn(true)
     // alert(authKitSignData.eoa);
@@ -206,9 +190,6 @@ export default function Home() {
   }
 
   const logout = async () => {
-    const web3AuthModalPack = new Web3AuthModalPack(web3AuthConfig)
-    await web3AuthModalPack.init({ options, adapters: [openloginAdapter], modalConfig })
-    await web3AuthModalPack.signOut()
     setLoggedIn(false)
     alert("Logged Out")
   }
