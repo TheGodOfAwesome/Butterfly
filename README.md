@@ -15,7 +15,7 @@ git clone repo
 2.  Change into the directory and install the dependencies
 
 ```sh
-cd AccessWalletDev
+cd Butterfly
 
 npm install
 
