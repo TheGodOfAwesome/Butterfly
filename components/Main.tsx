@@ -181,15 +181,13 @@ export default function Home() {
   }
   
 
-  async function login() {  
-  // https://web3auth.io/docs/sdk/pnp/web/modal/initialize#arguments
-    setUserData(authKitSignData.eoa)
+  async function login() {
     setLoggedIn(true)
   }
 
   const logout = async () => {
     setLoggedIn(false)
-    alert("Logged Out")
+    alert("Logged Out.")
   }
 
   async function setupSmartAccount() {
