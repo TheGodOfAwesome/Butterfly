@@ -256,12 +256,21 @@ export default function Home() {
   async function login() {  
   // https://web3auth.io/docs/sdk/pnp/web/modal/initialize#arguments
 
+    const web3AuthModalPack = new Web3AuthModalPack(web3AuthConfig)
+
+    await web3AuthModalPack.init({ options, adapters: [openloginAdapter], modalConfig })
+
+    const authKitSignData = await web3AuthModalPack.signIn()
+    setUserData(authKitSignData.eoa)
     setLoggedIn(true)
     // alert(authKitSignData.eoa);
     // console.log(authKitSignData.safes);
   }
 
   const logout = async () => {
+    const web3AuthModalPack = new Web3AuthModalPack(web3AuthConfig)
+    await web3AuthModalPack.init({ options, adapters: [openloginAdapter], modalConfig })
+    await web3AuthModalPack.signOut()
     setLoggedIn(false)
     alert("Logged Out")
   }
@@ -508,7 +517,7 @@ export default function Home() {
         :
           <div>
             <form onSubmit={sendFileToIPFS}>
-              <input type="file"  required />
+              <input type="file" onChange={ (e) =>setFileImg(e.target.files[0])} required />
               <button type='submit' >Upload Video</button>
             </form>
             <button onClick={cancelUpload}>Cancel Upload</button>
