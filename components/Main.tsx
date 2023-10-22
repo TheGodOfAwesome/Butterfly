@@ -18,6 +18,7 @@ import {
   UserInfo,
   WALLET_ADAPTERS
 } from '@web3auth/base'
+import axios from 'axios';
 
 
 const tokens = [
@@ -101,7 +102,18 @@ export default function Home() {
   
   const [userDataEoa, setUserDataEoa] = useState<string>('');
   const [userData, setUserData] = useState<string>('');
-  const [loggedIn, setLoggedIn] = useState<boolean>(false)
+  const [loggedIn, setLoggedIn] = useState<boolean>(false);
+  const [uploading, setUploading] = useState<boolean>(false);
+  const [fileImg, setFileImg] = useState(null);
+  const [vid, setVid] = useState<string>('https://chocolate-loose-newt-995.mypinata.cloud/ipfs/QmYNwjP1CDxwr4F9YZ7iWQrzinc1u6MVHUgxBd8Ne7qp6b');
+  const [vids, setVids] = useState<string[]>([
+    'https://chocolate-loose-newt-995.mypinata.cloud/ipfs/QmWjc12LgDnjFwX5Vg4JFMPf4dTjteRNBAPk19WHYjEEgb', 
+    'https://chocolate-loose-newt-995.mypinata.cloud/ipfs/Qmd2n6LApcw3k1vDCQWRC7rQt6tb9DnEVxUijtGfsKT5of', 
+    'https://chocolate-loose-newt-995.mypinata.cloud/ipfs/QmSvmnUg6dkMd3NQ9vziezpKcp2jHyP2mxy7TjDncDRnLe', 
+    'https://chocolate-loose-newt-995.mypinata.cloud/ipfs/QmUQHAw3VTBMAVizS1eaeaFqcSUPYx15EzLfe9NZmAX2wZ', 
+    'https://chocolate-loose-newt-995.mypinata.cloud/ipfs/QmWom5SZHAF3LcnXLaeB7UXiQnXFKaYmS1MMR6FNYsHZYZ', 
+    'https://chocolate-loose-newt-995.mypinata.cloud/ipfs/QmYNwjP1CDxwr4F9YZ7iWQrzinc1u6MVHUgxBd8Ne7qp6b'
+  ]);
 
   useEffect(() => {
     let configureLogin
@@ -180,14 +192,87 @@ export default function Home() {
     }
   }
   
+  const sendFileToIPFS = async (e) => {
+    if (fileImg) {
+      try {
+        const formData = new FormData();
+        formData.append("file", fileImg);
+        const resFile = await axios({
+          method: "post",
+          url: "https://api.pinata.cloud/pinning/pinFileToIPFS",
+          data: formData,
+          headers: {
+            'pinata_api_key': `9311ada3b00ffd86f5e1`,
+            'pinata_secret_api_key': `164064a204b95beb5a1c5a1549dec0b63e7227b68fd100fd77be7d1ebcb4388c`,
+            "Content-Type": "multipart/form-data"
+          },
+        });
+        const ImgHash = `ipfs://${resFile.data.IpfsHash}`;
 
-  async function login() {
+        axios.post(
+          'https://butterfly-api.onrender.com/posts/', 
+          {
+            "video" : `ipfs://${resFile.data.IpfsHash}`,
+            "creator": "admin",
+            "likes" : 0,
+            "comments" : "{}"
+          }
+        )
+        .then((response) => {
+          console.log(response.data);
+          setUploading(!uploading);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+        console.log(ImgHash);
+      } catch (error) {
+        console.log("Error sending File to IPFS: ")
+        console.log(error)
+      }
+    }
+  }
+
+  async function cancelUpload() {  
+    setUploading(!uploading);
+  }
+  
+
+  async function upload() {  
+    setUploading(!uploading);
+  }
+
+  async function prev() {  
+    const randomIndex = Math.floor(Math.random() * vids.length);
+    setVid(vids[randomIndex]);
+  }
+
+  async function next() {  
+    const randomIndex = Math.floor(Math.random() * vids.length);
+    setVid(vids[randomIndex]);
+  }
+  
+
+  async function login() {  
+  // https://web3auth.io/docs/sdk/pnp/web/modal/initialize#arguments
+
+    const web3AuthModalPack = new Web3AuthModalPack(web3AuthConfig)
+
+    await web3AuthModalPack.init({ options, adapters: [openloginAdapter], modalConfig })
+
+    const authKitSignData = await web3AuthModalPack.signIn()
+    setUserData(authKitSignData.eoa)
     setLoggedIn(true)
+    // alert(authKitSignData.eoa);
+    // console.log(authKitSignData.safes);
   }
 
   const logout = async () => {
+    const web3AuthModalPack = new Web3AuthModalPack(web3AuthConfig)
+    await web3AuthModalPack.init({ options, adapters: [openloginAdapter], modalConfig })
+    await web3AuthModalPack.signOut()
     setLoggedIn(false)
-    alert("Logged Out.")
+    alert("Logged Out")
   }
 
   async function setupSmartAccount() {
@@ -395,34 +480,49 @@ export default function Home() {
         : <div>{userData}<button className={buttonStyle} onClick={logout}>Logout</button></div>
       }
 
-      <div className="flex justify-center items-center h-screen bg-black">
-        <div className="flex">
-            <div className="flex flex-col ml-8">
-              <video 
-                className="w-64 h-64 md:w-96 md:h-96 lg:w-128 lg:h-128 rounded-lg"
-                style={{ aspectRatio: '9 / 16' }}
-                src="/video/test.mp4" 
-                controls 
-                autoPlay 
-                muted
-                loop
-              >
-                  Your browser does not support the video tag.
-              </video>
+
+      
+      {
+        (!uploading)
+        ?
+          <div className="flex justify-center items-center h-screen bg-black">
+            <div className="flex">
+                <div className="flex flex-col ml-8">
+                  <video 
+                    className="w-64 h-64 md:w-96 md:h-96 lg:w-128 lg:h-128 rounded-lg"
+                    style={{ aspectRatio: '9 / 16', maxHeight: '720px' }}
+                    //src="/video/test.mp4" 
+                    src={vid}
+                    controls 
+                    autoPlay 
+                    muted
+                    loop
+                  >
+                      Your browser does not support the video tag.
+                  </video>
+                </div>
+                <div className="flex flex-col ml-4">
+                  <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-2" onClick={prev}><h3>↑ previous</h3></button>
+                  &nbsp;
+                  <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-2"><h3>like</h3></button>
+                  &nbsp;
+                  <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-2" onClick={upload}><h3>upload</h3></button>
+                  &nbsp;
+                  <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-2"><h3>share</h3></button>
+                  &nbsp;
+                  <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={next}><h3>↓ next</h3></button>
+                </div>
             </div>
-            <div className="flex flex-col ml-4">
-              <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-2"><h3>↑ previous</h3></button>
-              &nbsp;
-              <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-2"><h3>like</h3></button>
-              &nbsp;
-              <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-2"><h3>upload</h3></button>
-              &nbsp;
-              <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-2"><h3>share</h3></button>
-              &nbsp;
-              <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"><h3>↓ next</h3></button>
-            </div>
-        </div>
-      </div>
+          </div>
+        :
+          <div>
+            <form onSubmit={sendFileToIPFS}>
+              <input type="file" onChange={ (e) =>setFileImg(e.target.files[0])} required />
+              <button type='submit' >Upload Video</button>
+            </form>
+            <button onClick={cancelUpload}>Cancel Upload</button>
+          </div>
+      }
 
       {
         // !smartAccount && !loading && <button className={buttonStyle} onClick={login}>Login</button>
