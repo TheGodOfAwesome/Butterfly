@@ -1,4 +1,4 @@
-## Access Wallet
+## Butterfly
 
 Example Next.js application showing how to sign in with choice of social provider or EVM wallet.
 
